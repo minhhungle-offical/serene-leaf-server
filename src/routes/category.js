@@ -10,17 +10,17 @@ import { checkAuth } from "../middlewares/checkAuth.js";
 
 const router = express.Router();
 
-// Routes for logged-in users
-router.use(checkAuth); // All routes below require login
-
-// POST /api/categories - Create a new category
-router.post("/", createCategory);
-
 // GET /api/categories - Get all categories
 router.get("/", getAllCategories);
 
 // GET /api/categories/:id - Get a single category by ID
 router.get("/:id", getCategoryById);
+
+// Routes for logged-in users
+router.use(checkAuth); // All routes below require login
+
+// POST /api/categories - Create a new category
+router.post("/", createCategory);
 
 // PUT /api/categories/:id - Update a category
 router.put("/:id", updateCategory);
