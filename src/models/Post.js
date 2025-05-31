@@ -30,9 +30,19 @@ const postSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      trim: true,
+      ref: "PostCategory",
+    },
     image: {
       url: { type: String, required: false },
       publicId: { type: String, required: false },
+    },
+
+    isActive: {
+      type: Boolean,
+      default: false,
     },
   },
   {
