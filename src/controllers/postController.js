@@ -89,6 +89,7 @@ export const getPosts = async (req, res, next) => {
 
     const posts = await Post.find(query)
       .populate("author", "name email")
+      .populate("category", "name slug")
       .sort(sortOptions)
       .skip((pageNumber - 1) * limitNumber)
       .limit(limitNumber)
@@ -117,10 +118,9 @@ export const getPosts = async (req, res, next) => {
 // Get post by slug
 export const getPostBySlug = async (req, res, next) => {
   try {
-    const post = await Post.findOne({ slug: req.params.slug }).populate(
-      "author",
-      "name email"
-    );
+    const post = await Post.findOne({ slug: req.params.slug })
+      .populate("author", "name email")
+      .populate("category", "name slug");
 
     if (!post) {
       return res.status(404).json({
