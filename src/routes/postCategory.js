@@ -2,21 +2,20 @@ import express from "express";
 import {
   createCategory,
   getAllCategories,
-  getCategoryById,
+  getCategoryBySlug,
   updateCategory,
   deleteCategory,
-  getCategoryBySlug,
-} from "../controllers/categoryController.js";
+} from "../controllers/postCategoryController.js";
 import { checkAuth } from "../middlewares/checkAuth.js";
 
 const router = express.Router();
+
 router.get("/", getAllCategories);
-router.get("/:id", getCategoryById);
+router.get("/:slug", getCategoryBySlug);
 
 router.use(checkAuth);
 router.post("/", createCategory);
-router.put("/:id", updateCategory);
-router.delete("/:id", deleteCategory);
-router.get("/slug/:slug", getCategoryBySlug);
+router.put("/:slug", updateCategory);
+router.delete("/:slug", deleteCategory);
 
 export default router;

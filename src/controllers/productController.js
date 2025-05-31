@@ -1,5 +1,6 @@
-import Product from "../models/Product.js";
 import cloudinary from "../config/cloudinary.js";
+import { generateUniqueSlug } from "../helper/slugHelper.js";
+import Product from "../models/Product.js";
 
 // Create a new product
 export const createProduct = async (req, res, next) => {
@@ -7,7 +8,6 @@ export const createProduct = async (req, res, next) => {
     const { name, description, price, quantity, category, shortDescription } =
       req.body;
 
-    // Validate required fields
     if (!name || !price) {
       return res.status(400).json({
         success: false,
@@ -15,8 +15,9 @@ export const createProduct = async (req, res, next) => {
       });
     }
 
-    // req.file contains the uploaded file info (single file)
-    // file.path is the image URL, file.filename is the publicId on Cloudinary
+    // Generate unique slug
+    const slug = await generateUniqueSlug(name);
+
     const image = req.file
       ? {
           url: req.file.path,
@@ -24,21 +25,19 @@ export const createProduct = async (req, res, next) => {
         }
       : null;
 
-    // Create a new product document
     const newProduct = new Product({
       name,
+      slug,
       shortDescription,
       description,
       price,
       quantity: quantity || 0,
       category,
-      image, // store single image as an object {url, publicId}
+      image,
     });
 
-    // Save product to the database
     const savedProduct = await newProduct.save();
 
-    // Send success response
     res.status(201).json({
       success: true,
       message: "Product created successfully",
@@ -49,7 +48,7 @@ export const createProduct = async (req, res, next) => {
   }
 };
 
-// Get all products with advanced filters, search, sort, and pagination
+// Get all products with filters, search, sort, pagination
 export const getProducts = async (req, res, next) => {
   try {
     const {
@@ -66,34 +65,28 @@ export const getProducts = async (req, res, next) => {
 
     const query = {};
 
-    // Text search
     if (search) {
       query.name = { $regex: search, $options: "i" };
     }
 
-    // Category filter
     if (category) {
       query.category = category;
     }
 
-    // Price range filter
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
 
-    // Active status
     if (isActive !== undefined) {
-      query.isActive = isActive === "true"; // boolean từ query string
+      query.isActive = isActive === "true";
     }
 
-    // Sort configuration
-    const sortOrder = order === "asc" ? 1 : -1; //asc && desc
+    const sortOrder = order === "asc" ? 1 : -1;
     const sortOptions = {};
     sortOptions[sortBy] = sortOrder;
 
-    // Fetch data
     const products = await Product.find(query)
       .sort(sortOptions)
       .skip((page - 1) * limit)
@@ -141,9 +134,29 @@ export const getProductById = async (req, res, next) => {
   }
 };
 
+// Get product by slug
+export const getProductBySlug = async (req, res, next) => {
+  try {
+    const product = await Product.findOne({ slug: req.params.slug });
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Product retrieved successfully",
+      data: product,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Update a product
 export const updateProduct = async (req, res, next) => {
-  const { image, ...rest } = req.body;
   try {
     const product = await Product.findById(req.params.id);
     if (!product) {
@@ -151,6 +164,17 @@ export const updateProduct = async (req, res, next) => {
         success: false,
         message: "Product not found",
       });
+    }
+
+    const { name, ...rest } = req.body;
+
+    if (!product.slug) {
+      product.slug = await generateUniqueSlug(name);
+    }
+
+    if (name && name !== product.name) {
+      product.slug = await generateUniqueSlug(name, product._id);
+      product.name = name;
     }
 
     Object.assign(product, rest);
@@ -190,7 +214,7 @@ export const deleteProduct = async (req, res, next) => {
 
     const image = product.image;
 
-    if (image.publicId) {
+    if (image && image.publicId) {
       await cloudinary.uploader.destroy(image.publicId);
     }
     await product.deleteOne();

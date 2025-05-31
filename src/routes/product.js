@@ -3,6 +3,7 @@ import {
   createProduct,
   deleteProduct,
   getProductById,
+  getProductBySlug,
   getProducts,
   updateProduct,
 } from "../controllers/productController.js";
@@ -11,22 +12,13 @@ import { uploadImage } from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
-// GET /api/products - Get all products with filters
 router.get("/", getProducts);
-
-// GET /api/products/:id - Get single product by ID
 router.get("/:id", getProductById);
+router.get("/slug/:slug", getProductBySlug);
 
-// Routes for logged-in users
-router.use(checkAuth); // All routes below require login
-
-// POST /api/products - Create new product
+router.use(checkAuth);
 router.post("/", uploadImage, createProduct);
-
-// PUT /api/products/:id - Update a product
 router.put("/:id", uploadImage, updateProduct);
-
-// DELETE /api/products/:id - Delete a product (and image if needed)
 router.delete("/:id", deleteProduct);
 
 export default router;

@@ -1,33 +1,28 @@
+import { generateUniqueSlug } from "../helper/slugHelper.js";
 import Category from "../models/Category.js";
 
-// Create new category
+// Create category with unique slug
 export const createCategory = async (req, res, next) => {
   try {
     const { name, description } = req.body;
+    if (!name)
+      return res.status(400).json({ success: false, message: "Name required" });
 
-    if (!name) {
-      return res.status(400).json({
-        success: false,
-        message: "Category name is required",
-      });
-    }
+    // Check name duplication
+    const exists = await Category.findOne({ name });
+    if (exists)
+      return res
+        .status(409)
+        .json({ success: false, message: "Category exists" });
 
-    const existingCategory = await Category.findOne({ name });
-    if (existingCategory) {
-      return res.status(409).json({
-        success: false,
-        message: "Category already exists",
-      });
-    }
+    const slug = await generateUniqueSlug(name);
 
-    const newCategory = new Category({ name, description });
-    await newCategory.save();
+    const category = new Category({ name, description, slug });
+    await category.save();
 
-    res.status(201).json({
-      success: true,
-      message: "Category created successfully",
-      data: newCategory,
-    });
+    res
+      .status(201)
+      .json({ success: true, message: "Category created", data: category });
   } catch (error) {
     next(error);
   }
@@ -37,10 +32,9 @@ export const createCategory = async (req, res, next) => {
 export const getAllCategories = async (req, res, next) => {
   try {
     const categories = await Category.find().sort({ createdAt: -1 }).lean();
-
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "Categories retrieved successfully",
+      message: "Categories fetched",
       data: categories,
     });
   } catch (error) {
@@ -52,70 +46,64 @@ export const getAllCategories = async (req, res, next) => {
 export const getCategoryById = async (req, res, next) => {
   try {
     const category = await Category.findById(req.params.id).lean();
-
-    if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: "Category not found",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Category retrieved successfully",
-      data: category,
-    });
+    if (!category)
+      return res
+        .status(404)
+        .json({ success: false, message: "Category not found" });
+    res.json({ success: true, message: "Category fetched", data: category });
   } catch (error) {
     next(error);
   }
 };
 
-// Update category by ID
+// Update category with unique slug if name changes
 export const updateCategory = async (req, res, next) => {
   try {
     const { name, description } = req.body;
-
     const category = await Category.findById(req.params.id);
-    if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: "Category not found",
-      });
-    }
+    if (!category)
+      return res
+        .status(404)
+        .json({ success: false, message: "Category not found" });
 
-    if (name) category.name = name;
+    if (name && name !== category.name) {
+      category.name = name;
+      category.slug = await generateUniqueSlug(name, category._id);
+    }
     if (description) category.description = description;
 
     await category.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Category updated successfully",
-      data: category,
-    });
+    res.json({ success: true, message: "Category updated", data: category });
   } catch (error) {
     next(error);
   }
 };
 
-// Delete category by ID
+// Delete category
 export const deleteCategory = async (req, res, next) => {
   try {
     const category = await Category.findById(req.params.id);
-
-    if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: "Category not found",
-      });
-    }
+    if (!category)
+      return res
+        .status(404)
+        .json({ success: false, message: "Category not found" });
 
     await category.deleteOne();
+    res.json({ success: true, message: "Category deleted" });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    res.status(200).json({
-      success: true,
-      message: "Category deleted successfully",
-    });
+// Get category by slug
+export const getCategoryBySlug = async (req, res, next) => {
+  try {
+    const category = await Category.findOne({ slug: req.params.slug }).lean();
+    if (!category)
+      return res
+        .status(404)
+        .json({ success: false, message: "Category not found" });
+    res.json({ success: true, message: "Category fetched", data: category });
   } catch (error) {
     next(error);
   }
