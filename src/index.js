@@ -17,6 +17,7 @@ const allowedOrigins = [
   "http://localhost:5173",
   "https://sereneleaf.vercel.app",
   "https://admin-sereneleaf.vercel.app",
+  "http://react.gvbsoft.com",
 ];
 
 const corsOptions = {
