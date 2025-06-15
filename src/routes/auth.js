@@ -12,7 +12,7 @@ import {
 
 const router = express.Router();
 
-router.post("/signup", signup);
+router.post("/register", signup);
 router.post("/login", login);
 router.post("/change-password", changePassword);
 router.post("/reset-password/request", requestResetPassword);

@@ -15,6 +15,7 @@ const port = process.env.PORT || 3000;
 const allowedOrigins = [
   "http://localhost:3000", // local dev (frontend)
   "http://localhost:5173",
+
   "https://sereneleaf.vercel.app",
   "https://admin-sereneleaf.vercel.app",
   "http://react.gvbsoft.com",
