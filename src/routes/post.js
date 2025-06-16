@@ -16,9 +16,8 @@ router.get("/", getPosts);
 router.get("/id/:id", getPostById);
 router.get("/slug/:slug", getPostBySlug);
 
-router.use(checkAuth);
-router.post("/", upload.single("image"), createPost);
-router.put("/:id", upload.single("image"), updatePost);
-router.delete("/:id", deletePost);
+router.post("/", checkAuth, upload.single("image"), createPost);
+router.put("/:id", checkAuth, upload.single("image"), updatePost);
+router.delete("/:id", checkAuth, deletePost);
 
 export default router;

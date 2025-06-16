@@ -16,9 +16,8 @@ router.get("/", getProducts);
 router.get("/:id", getProductById);
 router.get("/slug/:slug", getProductBySlug);
 
-router.use(checkAuth);
-router.post("/", uploadImage, createProduct);
-router.put("/:id", uploadImage, updateProduct);
-router.delete("/:id", deleteProduct);
+router.post("/", checkAuth, uploadImage, createProduct);
+router.put("/:id", checkAuth, uploadImage, updateProduct);
+router.delete("/:id", checkAuth, deleteProduct);
 
 export default router;
