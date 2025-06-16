@@ -13,8 +13,8 @@ import { uploadImage } from "../middlewares/uploadMiddleware.js";
 const router = express.Router();
 
 router.get("/", getProducts);
-router.get("/:id", getProductById);
 router.get("/slug/:slug", getProductBySlug);
+router.get("/:id", getProductById);
 
 router.post("/", checkAuth, uploadImage, createProduct);
 router.put("/:id", checkAuth, uploadImage, updateProduct);
