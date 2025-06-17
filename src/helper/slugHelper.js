@@ -1,5 +1,5 @@
 import slugify from "slugify";
-import PostCategory from "../models/PostCategory.js"; // điều chỉnh đường dẫn phù hợp
+import PostCategory from "../models/PostCategory.js";
 
 export async function generateUniqueSlug(name, currentId = null) {
   let baseSlug = slugify(name, { lower: true, strict: true });
