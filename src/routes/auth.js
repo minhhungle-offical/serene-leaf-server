@@ -8,6 +8,7 @@ import {
   signup,
   verifyOtp,
 } from "../controllers/authController.js";
+import { checkAuth } from "../middlewares/checkAuth.js";
 
 const router = express.Router();
 
