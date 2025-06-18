@@ -5,6 +5,6 @@
   "password": "123456a",
   "address": "Hồ Chí Minh",
   "role": "admin",
-  "phoneNumber": "0989898989"
+  "phoneNumber": "+84989898989"
 }
 ```
