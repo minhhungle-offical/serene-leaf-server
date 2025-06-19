@@ -4,21 +4,24 @@ import {
   addToCart,
   removeFromCart,
   clearCart,
+  updateCartItemQuantity,
 } from "../controllers/cartController.js";
 import { checkAuth } from "../middlewares/checkAuth.js";
 
 const router = express.Router();
 
-// 👉 Lấy giỏ hàng
+// 👉 Get current user's cart
 router.get("/", checkAuth, getCart);
 
-// 👉 Thêm/cập nhật món trong giỏ
+// 👉 Add or update an item in the cart
 router.post("/", checkAuth, addToCart);
 
-// 👉 Xoá 1 sản phẩm khỏi giỏ
+router.put("/update-quantity/:productId", checkAuth, updateCartItemQuantity);
+
+// 👉 Remove a specific product from the cart
 router.delete("/:productId", checkAuth, removeFromCart);
 
-// 👉 Xoá toàn bộ giỏ
+// 👉 Clear the entire cart
 router.delete("/", checkAuth, clearCart);
 
 export default router;

@@ -6,25 +6,51 @@ export const getCart = async (req, res) => {
     const cart = await Cart.findOne({ user: req.user._id }).populate(
       "items.product"
     );
-    if (!cart) return res.status(200).json({ items: [] });
 
-    res.status(200).json(cart);
+    if (!cart) {
+      return res.status(200).json({
+        success: true,
+        message: "Cart is empty",
+        data: null,
+      });
+    }
+
+    const total = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+
+    const plainCart = cart.toObject(); // ⭐️ chuyển từ Mongoose document sang object thuần
+
+    return res.status(200).json({
+      success: true,
+      message: "Cart retrieved successfully",
+      data: {
+        ...plainCart,
+        total,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ message: "Failed to get cart", error });
+    console.error("Get cart error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get cart",
+      error: error.message || error,
+    });
   }
 };
 
 // 👉 Add or update item in cart
 export const addToCart = async (req, res) => {
   const { productId, quantity } = req.body;
+
+  // 👉 Convert to number
+  const quantityNumber = Number(quantity);
+
   try {
     let cart = await Cart.findOne({ user: req.user._id });
 
-    // Nếu chưa có giỏ → tạo mới
     if (!cart) {
       cart = new Cart({
         user: req.user._id,
-        items: [{ product: productId, quantity }],
+        items: [{ product: productId, quantity: quantityNumber }],
       });
     } else {
       const itemIndex = cart.items.findIndex(
@@ -32,11 +58,9 @@ export const addToCart = async (req, res) => {
       );
 
       if (itemIndex > -1) {
-        // Nếu sản phẩm đã có → cập nhật số lượng
-        cart.items[itemIndex].quantity += quantity;
+        cart.items[itemIndex].quantity += quantityNumber;
       } else {
-        // Nếu chưa có → thêm mới
-        cart.items.push({ product: productId, quantity });
+        cart.items.push({ product: productId, quantity: quantityNumber });
       }
     }
 
@@ -45,6 +69,44 @@ export const addToCart = async (req, res) => {
     res.status(200).json(populatedCart);
   } catch (error) {
     res.status(500).json({ message: "Failed to add to cart", error });
+  }
+};
+
+// 👉 Update quantity of an item in cart
+export const updateCartItemQuantity = async (req, res) => {
+  const { productId } = req.params;
+  const { quantity } = req.body;
+
+  const quantityNumber = Number(quantity);
+
+  if (isNaN(quantityNumber) || quantityNumber < 1) {
+    return res.status(400).json({ message: "Invalid quantity" });
+  }
+
+  try {
+    const cart = await Cart.findOne({ user: req.user._id });
+
+    if (!cart) return res.status(404).json({ message: "Cart not found" });
+
+    const itemIndex = cart.items.findIndex(
+      (item) => item.product.toString() === productId
+    );
+
+    if (itemIndex === -1) {
+      return res.status(404).json({ message: "Product not in cart" });
+    }
+
+    cart.items[itemIndex].quantity = quantityNumber;
+
+    await cart.save();
+    const populatedCart = await cart.populate("items.product");
+
+    res.status(200).json({
+      message: "Cart item updated",
+      data: populatedCart,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update cart item", error });
   }
 };
 
